@@ -1,0 +1,83 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  userId    String   @id @default(uuid())
+  firstName String
+  lastName  String
+  cpf       String
+  email     String   @unique
+  phone     String?
+  password  String
+  status    Boolean
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  city      String?
+  state     String?
+
+  // Relacionamentos
+  books         Book[]   @relation("BookOwner")
+  reviews       Review[]
+  loansAsRenter Loan[]   @relation("LoanRenter")
+  loansAsLender Loan[]   @relation("LoanLender")
+}
+
+model Book {
+  bookId      String  @id @default(uuid())
+  title       String
+  author      String
+  status      Boolean @default(true)
+  publisher   String
+  description String?
+  category    String
+  ownerId     String
+
+  // Relacionamentos
+  owner   User     @relation("BookOwner", fields: [ownerId], references: [userId])
+  reviews Review[]
+  loans   Loan[]
+}
+
+model Review {
+  reviewId  String   @id @default(uuid())
+  userId    String
+  loanId    String
+  bookId    String
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+
+  // Relacionamentos
+  user User @relation(fields: [userId], references: [userId])
+  loan Loan @relation(fields: [loanId], references: [loanId])
+  book Book @relation(fields: [bookId], references: [bookId])
+}
+
+// model Category {
+//   categoryId Int    @id @default(autoincrement())
+//   name       String
+
+//   // Relacionamentos
+//   books Book[]
+// }
+
+model Loan {
+  loanId       String   @id @default(uuid())
+  bookId       String
+  checkoutDate DateTime @default(now())
+  returnDate   DateTime
+  renterId     String
+  lenderId     String
+
+  // Relacionamentos
+  book   Book     @relation(fields: [bookId], references: [bookId])
+  renter User     @relation("LoanRenter", fields: [renterId], references: [userId])
+  lender User     @relation("LoanLender", fields: [lenderId], references: [userId])
+  Review Review[]
+}
